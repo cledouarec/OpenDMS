@@ -7,9 +7,11 @@ Main entry point to start Open DMS.
 import argparse
 import logging
 import sys
+import cv2
+from .facedetector import detect_from_video, CaffeFaceDetector as Detector
 
 
-def main():
+def main() -> None:
     """
     Entry point of Open DMS script.
     """
@@ -34,4 +36,8 @@ def main():
         stream=sys.stdout,
         format="%(asctime)s - %(levelname)s - %(message)s",
         level=log_level,
+    )
+
+    detect_from_video(
+        video_stream=cv2.VideoCapture(0), detector=Detector(), draw_boxes=True
     )

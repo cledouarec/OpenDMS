@@ -5,9 +5,9 @@ name: Lint
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   lint:
@@ -36,9 +36,9 @@ jobs:
     - name: Lint with pylint
       run: |
         # Stop the build if there are Python syntax errors or undefined names
-        pylint --errors-only jira_agile_metrics
+        pylint --errors-only opendms
         # Exit-zero treats all errors as warnings.
-        pylint --exit-zero jira_agile_metrics > pylint_results.txt
+        pylint --exit-zero opendms > pylint_results.txt
     - name: Upload pylint results
       uses: actions/upload-artifact@v2
       with:
