@@ -36,9 +36,9 @@ jobs:
     - name: Lint with pylint
       run: |
         # Stop the build if there are Python syntax errors or undefined names
-        pylint --errors-only opendms
+        pylint --errors-only src/opendms
         # Exit-zero treats all errors as warnings.
-        pylint --exit-zero opendms > pylint_results.txt
+        pylint --exit-zero src/opendms > pylint_results.txt
     - name: Upload pylint results
       uses: actions/upload-artifact@v2
       with:

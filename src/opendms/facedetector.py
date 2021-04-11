@@ -9,6 +9,7 @@ from typing import List, Union
 import cv2
 import dlib
 import numpy as np
+import pkg_resources
 
 
 class HaarFaceDetector:
@@ -16,14 +17,16 @@ class HaarFaceDetector:
     This class is used to detect face based on Haar cascade classifier.
     """
 
-    def __init__(
-        self,
-        cascade_path: str = "facedetector_config/haarcascade_frontalface2.xml",
-    ):
+    def __init__(self, cascade_path: str = None):
         """
         Constructs detector from given cascade classifier.
         """
-        logging.info("Create face detector based on Haar cascade")
+        logging.info("Create face detector based on Haar cascade classifier")
+
+        if cascade_path is None:
+            cascade_path = pkg_resources.resource_stream(
+                __name__, "data/haarcascade_frontalface2.xml"
+            ).read()
 
         #: Haar cascade classifier
         self.__classifier = cv2.CascadeClassifier(cascade_path)
@@ -55,7 +58,7 @@ class DLibFaceDetector:
         """
         Constructs DLib detector.
         """
-        logging.info("Create face detector based on DLib cascade")
+        logging.info("Create face detector based on DLib classifier")
 
         #: DLib classifier
         self.__classifier = dlib.get_frontal_face_detector()
@@ -88,18 +91,20 @@ class CaffeFaceDetector:
     This class is used to detect face based on Caffe model classifier.
     """
 
-    def __init__(self, dnn_proto_text=None, dnn_model=None):
+    def __init__(self, dnn_proto_text: str = None, dnn_model: str = None):
         """
         Constructs detector from given cascade classifier.
         """
-        logging.info("Create face detector based on Haar cascade")
+        logging.info("Create face detector based on Caffe dnn model")
 
         if dnn_proto_text is None:
-            dnn_proto_text = "facedetector_config/deploy.prototxt.txt"
+            dnn_proto_text = pkg_resources.resource_stream(
+                __name__, "data/deploy.prototxt.txt"
+            ).read()
         if dnn_model is None:
-            dnn_model = (
-                "facedetector_config/res10_300x300_ssd_iter_140000.caffemodel"
-            )
+            dnn_model = pkg_resources.resource_stream(
+                __name__, "data/res10_300x300_ssd_iter_140000.caffemodel"
+            ).read()
 
         #: DNN classifier
         self.__classifier = cv2.dnn.readNetFromCaffe(dnn_proto_text, dnn_model)
