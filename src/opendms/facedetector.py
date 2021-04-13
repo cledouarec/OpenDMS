@@ -5,14 +5,28 @@ All functions related to face detection
 """
 
 import logging
-from typing import List, Union
+from typing import List
 import cv2
 import dlib
 import numpy as np
 import pkg_resources
 
 
-class HaarFaceDetector:
+class FaceDetector:
+    """
+    Base class for face detector.
+    """
+
+    def run(self, image) -> List:
+        """
+        Find faces from given `image`.
+
+        :param image: Input image
+        :return: List of faces detected
+        """
+
+
+class HaarFaceDetector(FaceDetector):
     """
     This class is used to detect face based on Haar cascade classifier.
     """
@@ -20,6 +34,8 @@ class HaarFaceDetector:
     def __init__(self, cascade_path: str = None):
         """
         Constructs detector from given cascade classifier.
+
+        :param cascade_path: cascade classifier path
         """
         logging.info("Create face detector based on Haar cascade classifier")
 
@@ -31,10 +47,12 @@ class HaarFaceDetector:
         #: Haar cascade classifier
         self.__classifier = cv2.CascadeClassifier(cascade_path)
 
-    def find_faces(self, image) -> List:
+    def run(self, image) -> List:
         """
-        Find faces from given image
-        :return: List of faces boxes detected
+        Find faces from given `image`.
+
+        :param image: Input image
+        :return: List of faces detected
         """
         # Preprocess image
         image_bw = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -44,12 +62,12 @@ class HaarFaceDetector:
 
         # Normalize results
         faces = []
-        for x, y, w, h in results:
-            faces.append(((x, y), (x + w, y + h)))
+        for x, y, width, heigth in results:
+            faces.append(((x, y), (x + width, y + heigth)))
         return faces
 
 
-class DLibFaceDetector:
+class DLibFaceDetector(FaceDetector):
     """
     This class is used to detect face based on DLib classifier.
     """
@@ -63,10 +81,12 @@ class DLibFaceDetector:
         #: DLib classifier
         self.__classifier = dlib.get_frontal_face_detector()
 
-    def find_faces(self, image) -> List:
+    def run(self, image) -> List:
         """
-        Find faces from given image
-        :return: List of faces boxes detected
+        Find faces from given `image`.
+
+        :param image: Input image
+        :return: List of faces detected
         """
         # Preprocess image
         image_bw = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -86,14 +106,23 @@ class DLibFaceDetector:
         return faces
 
 
-class CaffeFaceDetector:
+class CaffeFaceDetector(FaceDetector):
     """
     This class is used to detect face based on Caffe model classifier.
     """
 
-    def __init__(self, dnn_proto_text: str = None, dnn_model: str = None):
+    def __init__(
+        self,
+        dnn_proto_text: str = None,
+        dnn_model: str = None,
+        threshold: float = 0.5,
+    ):
         """
-        Constructs detector from given cascade classifier.
+        Constructs Caffe detector from given DNN.
+
+        :param dnn_proto_text:
+        :param dnn_model:
+        :param threshold:
         """
         logging.info("Create face detector based on Caffe dnn model")
 
@@ -109,13 +138,18 @@ class CaffeFaceDetector:
         #: DNN classifier
         self.__classifier = cv2.dnn.readNetFromCaffe(dnn_proto_text, dnn_model)
 
-    def find_faces(self, image, threshold: float = 0.5):
+        #: Confidence threshold to apply on result
+        self.__threshold = threshold
+
+    def run(self, image) -> List:
         """
-        Find faces from given image
-        :return: List of faces boxes detected
+        Find faces from given `image`.
+
+        :param image: Input image
+        :return: List of faces detected
         """
         # Preprocess image
-        h, w = image.shape[:2]
+        image_height, image_width = image.shape[:2]
         image_resized = cv2.resize(image, (300, 300))
 
         # Run classifier
@@ -129,49 +163,10 @@ class CaffeFaceDetector:
         # Normalize results
         faces = []
         for i in range(results.shape[2]):
-            if results[0, 0, i, 2] > threshold:
-                box = results[0, 0, i, 3:7] * np.array([w, h, w, h])
+            if results[0, 0, i, 2] > self.__threshold:
+                box = results[0, 0, i, 3:7] * np.array(
+                    [image_width, image_height, image_width, image_height]
+                )
                 (x, y, x1, y1) = box.astype("int")
                 faces.append(((x, y), (x1, y1)))
         return faces
-
-
-def draw_faces_boxes(image, faces: List) -> None:
-    """
-    Draw rectangle for each `faces` detected on the input `image`.
-
-    :param image: Input image
-    :param faces: List of faces detected to draw
-    """
-    for point1, point2 in faces:
-        cv2.rectangle(image, point1, point2, (0, 0, 255), 2)
-
-
-def detect_from_video(
-    video_stream: cv2.VideoCapture,
-    detector: Union[HaarFaceDetector, DLibFaceDetector, CaffeFaceDetector],
-    draw_boxes: bool = False,
-):
-    """
-    Run given face `detector` on `video_stream`.
-    The stream can be stopped by pressing q key.
-
-    :param video_stream: Video stream input
-    :param detector: Face detector
-    :param draw_boxes: Draw boxes for each faces detected
-    """
-    while True:
-        ret, frame = video_stream.read()
-        if not ret:
-            break
-
-        faces_detected = detector.find_faces(frame)
-        if draw_boxes:
-            draw_faces_boxes(frame, faces_detected)
-        cv2.imshow("img", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
-    # When everything is done, release the capture
-    video_stream.release()
-    cv2.destroyAllWindows()

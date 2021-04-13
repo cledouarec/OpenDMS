@@ -4,7 +4,7 @@
 Unit tests for face detector.
 """
 
-from opendms.facedetector import draw_faces_boxes
+from opendms.utils import draw_faces_boxes
 
 
 def test_draw_faces_boxes_with_empty_list_do_not_raise_error() -> None:

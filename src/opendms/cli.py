@@ -8,7 +8,9 @@ import argparse
 import logging
 import sys
 import cv2
-from .facedetector import detect_from_video, CaffeFaceDetector as Detector
+from .facedetector import CaffeFaceDetector as Detector
+from .facefilter import FaceBySize, FaceByRatio, FaceNearestCenter
+from .utils import detect_from_video
 
 
 def main() -> None:
@@ -41,5 +43,6 @@ def main() -> None:
     detect_from_video(
         video_stream=cv2.VideoCapture(0, cv2.CAP_DSHOW),
         detector=Detector(),
+        face_filters=[FaceBySize(), FaceByRatio(), FaceNearestCenter()],
         draw_boxes=True,
     )
