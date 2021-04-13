@@ -24,9 +24,9 @@ class HaarFaceDetector:
         logging.info("Create face detector based on Haar cascade classifier")
 
         if cascade_path is None:
-            cascade_path = pkg_resources.resource_stream(
+            cascade_path = pkg_resources.resource_filename(
                 __name__, "data/haarcascade_frontalface2.xml"
-            ).read()
+            )
 
         #: Haar cascade classifier
         self.__classifier = cv2.CascadeClassifier(cascade_path)
@@ -98,13 +98,13 @@ class CaffeFaceDetector:
         logging.info("Create face detector based on Caffe dnn model")
 
         if dnn_proto_text is None:
-            dnn_proto_text = pkg_resources.resource_stream(
+            dnn_proto_text = pkg_resources.resource_filename(
                 __name__, "data/deploy.prototxt.txt"
-            ).read()
+            )
         if dnn_model is None:
-            dnn_model = pkg_resources.resource_stream(
+            dnn_model = pkg_resources.resource_filename(
                 __name__, "data/res10_300x300_ssd_iter_140000.caffemodel"
-            ).read()
+            )
 
         #: DNN classifier
         self.__classifier = cv2.dnn.readNetFromCaffe(dnn_proto_text, dnn_model)
@@ -162,13 +162,15 @@ def detect_from_video(
     """
     while True:
         ret, frame = video_stream.read()
-        if ret:
-            faces_detected = detector.find_faces(frame)
-            if draw_boxes:
-                draw_faces_boxes(frame, faces_detected)
-            cv2.imshow("img", frame)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
+        if not ret:
+            break
+
+        faces_detected = detector.find_faces(frame)
+        if draw_boxes:
+            draw_faces_boxes(frame, faces_detected)
+        cv2.imshow("img", frame)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
 
     # When everything is done, release the capture
     video_stream.release()

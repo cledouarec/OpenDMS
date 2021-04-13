@@ -39,5 +39,7 @@ def main() -> None:
     )
 
     detect_from_video(
-        video_stream=cv2.VideoCapture(0), detector=Detector(), draw_boxes=True
+        video_stream=cv2.VideoCapture(0, cv2.CAP_DSHOW),
+        detector=Detector(),
+        draw_boxes=True,
     )
