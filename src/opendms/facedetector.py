@@ -58,13 +58,13 @@ class HaarFaceDetector(FaceDetector):
         image_bw = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Run classifier
-        results = self.__classifier.detectMultiScale(image_bw)
+        faces = self.__classifier.detectMultiScale(image_bw)
 
         # Normalize results
-        faces = []
-        for x, y, width, heigth in results:
-            faces.append(((x, y), (x + width, y + heigth)))
-        return faces
+        faces_normalized = []
+        for x, y, width, height in faces:
+            faces_normalized.append(((x, y), (x + width, y + height)))
+        return faces_normalized
 
 
 class DLibFaceDetector(FaceDetector):
@@ -92,18 +92,15 @@ class DLibFaceDetector(FaceDetector):
         image_bw = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Run classifier
-        results = self.__classifier(image_bw, 1)
+        faces = self.__classifier(image_bw, 1)
 
         # Normalize results
-        faces = []
-        for result in results:
-            faces.append(
-                (
-                    (result.left(), result.top()),
-                    (result.right(), result.bottom()),
-                )
+        faces_normalized = []
+        for face in faces:
+            faces_normalized.append(
+                ((face.left(), face.top()), (face.right(), face.bottom()))
             )
-        return faces
+        return faces_normalized
 
 
 class CaffeFaceDetector(FaceDetector):
@@ -120,9 +117,9 @@ class CaffeFaceDetector(FaceDetector):
         """
         Constructs Caffe detector from given DNN.
 
-        :param dnn_proto_text:
-        :param dnn_model:
-        :param threshold:
+        :param dnn_proto_text: Model architecture (i.e., the layers themselves)
+        :param dnn_model: Weights for the actual layers
+        :param threshold: Confidence threshold to apply on result
         """
         logging.info("Create face detector based on Caffe dnn model")
 
@@ -158,15 +155,15 @@ class CaffeFaceDetector(FaceDetector):
                 image_resized, 1.0, (300, 300), (104.0, 177.0, 123.0)
             )
         )
-        results = self.__classifier.forward()
+        faces = self.__classifier.forward()
 
         # Normalize results
-        faces = []
-        for i in range(results.shape[2]):
-            if results[0, 0, i, 2] > self.__threshold:
-                box = results[0, 0, i, 3:7] * np.array(
+        faces_normalized = []
+        for i in range(faces.shape[2]):
+            if faces[0, 0, i, 2] > self.__threshold:
+                box = faces[0, 0, i, 3:7] * np.array(
                     [image_width, image_height, image_width, image_height]
                 )
                 (x, y, x1, y1) = box.astype("int")
-                faces.append(((x, y), (x1, y1)))
-        return faces
+                faces_normalized.append(((x, y), (x1, y1)))
+        return faces_normalized

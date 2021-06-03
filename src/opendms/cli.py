@@ -10,6 +10,9 @@ import sys
 import cv2
 from .facedetector import CaffeFaceDetector as Detector
 from .facefilter import FaceBySize, FaceByRatio, FaceNearestCenter
+from .facelandmarksdetector import (
+    DLibFaceLandmarksDetector as LandmarksDetector,
+)
 from .utils import detect_from_video
 
 
@@ -45,4 +48,6 @@ def main() -> None:
         detector=Detector(),
         face_filters=[FaceBySize(), FaceByRatio(), FaceNearestCenter()],
         draw_boxes=True,
+        landmarks_detector=LandmarksDetector(),
+        draw_landmarks=True,
     )
